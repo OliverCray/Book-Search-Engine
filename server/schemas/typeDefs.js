@@ -34,6 +34,7 @@ const typeDefs = gql`
 
   type Query {
     me: User
+    searchGoogleBooks(query: String!): [Book]!
   }
 
   type Mutation {
