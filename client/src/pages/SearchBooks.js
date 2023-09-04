@@ -1,11 +1,11 @@
 import React, { useState, useEffect } from 'react'
 import { Container, Col, Form, Button, Card, Row } from 'react-bootstrap'
 
-import { useMutation } from '@apollo/client'
+import { useMutation, useQuery } from '@apollo/client'
 import { SAVE_BOOK } from '../utils/mutations'
+import { SEARCH_GOOGLE_BOOKS } from '../utils/queries'
 
 import Auth from '../utils/auth'
-import { searchGoogleBooks } from '../utils/API'
 import { saveBookIds, getSavedBookIds } from '../utils/localStorage'
 
 const SearchBooks = () => {
@@ -19,11 +19,25 @@ const SearchBooks = () => {
 
   const [saveBook] = useMutation(SAVE_BOOK)
 
+  // Use the useQuery hook to fetch data from the GraphQL server
+  const { loading, data } = useQuery(SEARCH_GOOGLE_BOOKS, {
+    variables: { query: searchInput }, // Pass the search query as a variable
+  })
+
+  // This displays the current state of `searchedBooks` any time it changes
+  // This is okay to use here because the google books API is free, however, if we were to use a paid API this would be a bad practice because it would cost money to make this many calls to the API
+  useEffect(() => {
+    if (data) {
+      // Set searchedBooks when data is available
+      setSearchedBooks(data.searchGoogleBooks)
+    }
+  }, [data])
+
   // set up useEffect hook to save `savedBookIds` list to localStorage on component unmount
   // learn more here: https://reactjs.org/docs/hooks-effect.html#effects-with-cleanup
   useEffect(() => {
     return () => saveBookIds(savedBookIds)
-  })
+  }, [savedBookIds])
 
   // create method to search for books and set state on form submit
   const handleFormSubmit = async (event) => {
@@ -34,21 +48,8 @@ const SearchBooks = () => {
     }
 
     try {
-      const response = await searchGoogleBooks(searchInput)
-
-      if (!response.ok) {
-        throw new Error('something went wrong!')
-      }
-
-      const { items } = await response.json()
-
-      const bookData = items.map((book) => ({
-        bookId: book.id,
-        authors: book.volumeInfo.authors || ['No author to display'],
-        title: book.volumeInfo.title,
-        description: book.volumeInfo.description,
-        image: book.volumeInfo.imageLinks?.thumbnail || '',
-      }))
+      // Use the data variable from the useQuery hook
+      const bookData = data.searchGoogleBooks
 
       setSearchedBooks(bookData)
       setSearchInput('')
@@ -71,7 +72,16 @@ const SearchBooks = () => {
 
     try {
       const { data } = await saveBook({
-        variables: { bookData: { ...bookToSave } },
+        variables: {
+          bookData: {
+            authors: bookToSave.authors,
+            description: bookToSave.description,
+            title: bookToSave.title,
+            bookId: bookToSave.bookId,
+            image: bookToSave.image,
+            link: bookToSave.link,
+          },
+        },
       })
 
       // if book successfully saves to user's account, save book id to state
@@ -110,7 +120,9 @@ const SearchBooks = () => {
 
       <Container>
         <h2 className="pt-5">
-          {searchedBooks.length
+          {loading
+            ? 'loading...'
+            : searchedBooks.length
             ? `Viewing ${searchedBooks.length} results:`
             : 'Search for a book to begin'}
         </h2>
