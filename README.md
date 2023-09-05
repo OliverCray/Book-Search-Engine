@@ -51,3 +51,11 @@ npm start
 ```
 
 You can then either use a tool like Insomnia or Postman to test the API routes, or you can navigate to http://localhost:3001/graphql to use the GraphQL playground. The GraphQL playground allows you to easily build queries and mutations and test them out.
+
+## Screenshots
+
+![Screenshot of the homepage](./assets/images/homepage.png)
+
+![Screenshot of search results](./assets/images/search-results.png)
+
+![Screenshot of the saved books page](./assets/images/saved-books.png)
