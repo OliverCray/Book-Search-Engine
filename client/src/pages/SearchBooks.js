@@ -24,7 +24,7 @@ const SearchBooks = () => {
     variables: { query: searchInput }, // Pass the search query as a variable
   })
 
-  // This displays the current state of `searchedBooks` any time it changes
+  // This displays new book results any time the searchInput changes
   // This is okay to use here because the google books API is free, however, if we were to use a paid API this would be a bad practice because it would cost money to make this many calls to the API
   useEffect(() => {
     if (data) {
